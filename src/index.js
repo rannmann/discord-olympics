@@ -5,9 +5,9 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 
 // Event handlers
 const readyHandler = require('./events/ready');
-const messageCreateHandler = require('./events/messageCreate');
+const interactionCreateHandler = require('./events/interactionCreate');
 
 client.once('ready', readyHandler);
-client.on('messageCreate', messageCreateHandler);
+client.on('interactionCreate', interactionCreateHandler);
 
 client.login(process.env.DISCORD_TOKEN);
