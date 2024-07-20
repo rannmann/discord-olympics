@@ -10,12 +10,8 @@ const scheduleLiveFeed = require('../schedules/liveFeed');
 
 const commands = [
     {
-        name: 'medals',
-        description: 'Get the current Olympic medal count'
-    },
-    {
         name: 'sports',
-        description: 'Get the list of sports being played on a specific date',
+        description: 'Get the list of sports being played on a specific date + how many events',
         options: [
             {
                 name: 'date',
@@ -24,12 +20,24 @@ const commands = [
                 required: false
             }
         ]
+    },
+    {
+        name: 'medalcount',
+        description: 'Get the Olympic medal count for a specific season',
+        options: [
+            {
+                name: 'season',
+                type: ApplicationCommandOptionType.String,
+                description: 'The season year to fetch the medal table data for. Defaults to 2021.',
+                required: false
+            }
+        ]
     }
 ];
 
 const rest = new REST({ version: '9' }).setToken(token);
 
-module.exports = async () => {
+module.exports = async (client) => {
     try {
         console.log('Bot is online!');
         

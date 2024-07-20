@@ -1,5 +1,13 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('@discordjs/builders');
 const DailySchedule = require('../models/DailySchedule');
+const iso = require('iso-3166-1');
+
+// Custom mapping for problematic country codes
+const customCountryMapping = {
+    'NED': 'NL',  // Netherlands
+    'GER': 'DE',  // Germany
+    'ROC': 'RU'   // Russian Olympic Committee (mapped to Russia)
+};
 
 /**
  * Formats an event into a Discord Embed message.
@@ -56,4 +64,33 @@ module.exports.formatSportsForDay = (schedule) => {
     embed.setDescription(description);
 
     return embed;
+};
+
+/**
+ * Formats the medal table data into a Discord Embed message.
+ *
+ * @param {CountryMedals[]} medalTable - The medal table data to format.
+ * @returns {EmbedBuilder} The formatted Discord Embed message.
+ */
+module.exports.formatMedalTable = (medalTable) => {
+    // Limit the medal table to the top 10 countries
+    const top10MedalTable = medalTable.slice(0, 10);
+
+    let description = '';
+    top10MedalTable.forEach(entry => {
+        let countryCode = customCountryMapping[entry.countryCode];
+        if (!countryCode) {
+            const country = iso.whereAlpha3(entry.countryCode);
+            if (!country) {
+                console.error(`Country code ${entry.countryCode} not found`);
+            }
+            countryCode = country ? country.alpha2 : 'white';
+        }
+        description += `:flag_${countryCode.toLowerCase()}: **${entry.country}** - Total: ${entry.total}, :first_place: ${entry.gold}, :second_place: ${entry.silver}, :third_place: ${entry.bronze}\n`;
+    });
+
+    return new EmbedBuilder()
+        .setTitle('Olympic Medal Count')
+        .setDescription(description)
+        .setColor(0x00AE86);
 };

@@ -3,6 +3,7 @@ const fs = require('fs');
 const parseEventData = require('./parseEventData');
 const path = require('path');
 const DailySchedule = require('../models/DailySchedule');
+const CountryMedals = require('../models/CountryMedals');
 
 const SPORT_FRONTPAGE = 'https://www.nbcolympics.com/api/sport_front?sort=title&filter%5Bstatus%5D=1&include=sport&include=sport';
 const HIGH_LEVEL_SCHEDULE = 'https://www.nbcolympics.com/api/high_level_schedule?include=sport&sort=drupal_internal__id';
@@ -60,6 +61,35 @@ module.exports.getAllSummerGamesSchedules = async (testDate) => {
     }
 
     return schedule;
+};
+
+/**
+ * Fetches and parses the medal table data.
+ *
+ * @param {string} season - The season year to fetch the medal table data for.  Use 2021 for testing.
+ * @returns {Promise<CountryMedals[]>} A promise that resolves to an array of MedalTableEntry objects.
+ */
+module.exports.getMedalTableData = async (season = '2024') => {
+    const url = `https://api-gracenote.nbcolympics.com/svc/games_v2.svc/json/GetMedalTable_Season?competitionSetId=1&season=${season}&languageCode=2`;
+    try {
+        const { data } = await axios.get(url);
+        if (data && data.MedalTableNOC) {
+            return data.MedalTableNOC.map(entry => new CountryMedals(
+                entry.c_NOC,
+                entry.c_NOCShort,
+                entry.n_Total,
+                entry.n_Gold,
+                entry.n_Silver,
+                entry.n_Bronze
+            ));
+        } else {
+            console.log('Invalid data format:', data);
+            return [];
+        }
+    } catch (error) {
+        console.log('Error fetching data:', error);
+        return [];
+    }
 };
 
 async function getScheduleData(url)
