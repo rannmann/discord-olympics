@@ -1,3 +1,5 @@
+const Event = require('../models/Event');
+
 module.exports = (event) => {
     const getParticipants = () => {
       // Prioritize countries
@@ -8,7 +10,7 @@ module.exports = (event) => {
       return event.athletes ? event.athletes.map(athlete => athlete.title) : [];
     };
   
-    const simplifiedEvent = {
+    const simplifiedEvent = new Event({
       eventId: event.drupalId,
       title: event.singleEvent.title,
       status: event.singleEvent.status,
@@ -24,8 +26,7 @@ module.exports = (event) => {
       heroImage: event.singleEvent.heroImage?.path,
       thumbnail: event.singleEvent.thumbnail?.path,
       summary: event.singleEvent.summary
-    };
+    });
   
     return simplifiedEvent;
   };
-  
