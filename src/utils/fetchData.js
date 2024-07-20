@@ -51,10 +51,12 @@ module.exports.getAllSummerGamesSchedules = async (testDate) => {
     const date = testDate || new Date().toISOString().split('T')[0];
     const schedules = {};
 
-    for (const urlId of urlIds) {
+    const schedulePromises = urlIds.map(async (urlId) => {
         const schedule = await module.exports.getScheduleForSportOnDate(urlId, date);
         schedules[urlId] = schedule;
-    }
+    });
+
+    await Promise.all(schedulePromises);
 
     return schedules;
 };
