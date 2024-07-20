@@ -1,6 +1,9 @@
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { clientId, guildId, token } = process.env;
+const { ApplicationCommandOptionType } = require('discord.js');
+const token = process.env.DISCORD_TOKEN;
+const clientId = process.env.DISCORD_APPLICATION_ID;
+const guildId = process.env.DISCORD_GUILD_ID;
 
 const scheduleDailyAnnouncement = require('../schedules/dailyAnnouncement');
 const scheduleLiveFeed = require('../schedules/liveFeed');
@@ -9,6 +12,18 @@ const commands = [
     {
         name: 'medals',
         description: 'Get the current Olympic medal count'
+    },
+    {
+        name: 'sports',
+        description: 'Get the list of sports being played on a specific date',
+        options: [
+            {
+                name: 'date',
+                type: ApplicationCommandOptionType.String,
+                description: 'The date in YYYY-MM-DD format. Defaults to today.',
+                required: false
+            }
+        ]
     }
 ];
 
@@ -25,8 +40,8 @@ module.exports = async () => {
 
         console.log('Successfully registered application commands.');
 
-        scheduleDailyAnnouncement();
-        scheduleLiveFeed();
+        //scheduleDailyAnnouncement();
+        //scheduleLiveFeed();
     } catch (error) {
         console.error(error);
     }

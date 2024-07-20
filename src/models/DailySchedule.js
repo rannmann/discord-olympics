@@ -1,7 +1,8 @@
 const Event = require('./Event');
 
 class DailySchedule {
-    constructor() {
+    constructor(date) {
+        this.date = date;
         this.sports = {};
     }
 

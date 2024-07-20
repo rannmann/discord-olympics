@@ -1,10 +1,10 @@
 const schedule = require('node-schedule');
 const fetchOlympicsData = require('../utils/fetchData');
 const { urls, announcementTime } = require('../config');
-const { Client, Intents } = require('discord.js');
+const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);

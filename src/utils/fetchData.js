@@ -50,7 +50,7 @@ module.exports.getSummerGamesUrlIds = () => {
 module.exports.getAllSummerGamesSchedules = async (testDate) => {
     const urlIds = module.exports.getSummerGamesUrlIds();
     const date = testDate || new Date().toISOString().split('T')[0];
-    const schedule = new DailySchedule();
+    const schedule = new DailySchedule(date);
 
     for (const urlId of urlIds) {
         const events = await module.exports.getScheduleForSportOnDate(urlId, date);

@@ -1,9 +1,9 @@
+require('dotenv').config();
 const fetchOlympicsData = require('../utils/fetchData');
 const { urls } = require('../config');
-const { Client, Intents, MessageEmbed } = require('discord.js');
-require('dotenv').config();
+const { Client, GatewayIntentBits, MessageEmbed } = require('discord.js');
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 let alertedEvents = new Set();
 
@@ -12,6 +12,9 @@ client.on('ready', async () => {
 
   // Polling function
   const pollForNewEvents = async () => {
+    console.log('Polling for new events...');
+    return; // TODO: For now don't actually poll for new events
+    
     //const events = await fetchOlympicsData(urls.scheduleUrl);
     const currentTime = Math.floor(Date.now() / 1000); // Current timestamp in seconds
 
