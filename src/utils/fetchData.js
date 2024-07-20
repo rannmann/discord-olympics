@@ -2,6 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const parseEventData = require('./parseEventData');
 const path = require('path');
+const DailySchedule = require('../models/DailySchedule');
 
 const SPORT_FRONTPAGE = 'https://www.nbcolympics.com/api/sport_front?sort=title&filter%5Bstatus%5D=1&include=sport&include=sport';
 const HIGH_LEVEL_SCHEDULE = 'https://www.nbcolympics.com/api/high_level_schedule?include=sport&sort=drupal_internal__id';
@@ -44,21 +45,21 @@ module.exports.getSummerGamesUrlIds = () => {
  * Fetches the schedule data for all summer games on a given date.
  *
  * @param {string} [testDate] - Optional test date in YYYY-MM-DD format. If not provided, the current date will be used.
- * @returns {Promise<Object>} A promise that resolves to an object where each key is a URL ID and the value is the schedule data for that sport on the given day.
+ * @returns {Promise<DailySchedule>} A promise that resolves to a DailySchedule object where each key is a sport name and the value is an array of events for that sport on the given day.
  */
 module.exports.getAllSummerGamesSchedules = async (testDate) => {
     const urlIds = module.exports.getSummerGamesUrlIds();
     const date = testDate || new Date().toISOString().split('T')[0];
-    const schedules = {};
+    const schedule = new DailySchedule();
 
-    const schedulePromises = urlIds.map(async (urlId) => {
-        const schedule = await module.exports.getScheduleForSportOnDate(urlId, date);
-        schedules[urlId] = schedule;
-    });
+    for (const urlId of urlIds) {
+        const events = await module.exports.getScheduleForSportOnDate(urlId, date);
+        events.forEach(event => {
+            schedule.addEvent(event.sport.title, event);
+        });
+    }
 
-    await Promise.all(schedulePromises);
-
-    return schedules;
+    return schedule;
 };
 
 async function getScheduleData(url)
@@ -77,4 +78,3 @@ async function getScheduleData(url)
         console.log('Error fetching data:', error);
     }
 }
-

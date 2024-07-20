@@ -1,3 +1,5 @@
+const Sport = require('./Sport');
+
 class Event {
     constructor({
         eventId,
@@ -19,7 +21,7 @@ class Event {
         this.startDate = startDate;
         this.endDate = endDate;
         this.isMedalSession = isMedalSession;
-        this.sport = sport;
+        this.sport = new Sport(sport);
         this.participants = participants;
         this.videoURL = videoURL;
         this.heroImage = heroImage;
