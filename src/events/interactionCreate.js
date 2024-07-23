@@ -2,6 +2,7 @@ const { urls } = require('../config');
 const fetchOlympicsData = require('../utils/fetchData');
 const messageFormatter = require('../utils/messageFormatter');
 const medalCountCommand = require('../commands/medalcount');
+const sportEventsCommand = require('../commands/sportevents');
 
 module.exports = async (interaction) => {
     if (!interaction.isCommand()) return;
@@ -19,5 +20,9 @@ module.exports = async (interaction) => {
 
     if (commandName === 'medalcount') {
         await medalCountCommand.execute(interaction);
+    }
+
+    if (commandName === 'sportevents') {
+        await sportEventsCommand.execute(interaction);
     }
 };

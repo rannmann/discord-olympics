@@ -4,6 +4,7 @@ const parseEventData = require('./parseEventData');
 const path = require('path');
 const DailySchedule = require('../models/DailySchedule');
 const CountryMedals = require('../models/CountryMedals');
+const knex = require('knex')(require('../../knexfile').development);
 
 const SPORT_FRONTPAGE = 'https://www.nbcolympics.com/api/sport_front?sort=title&filter%5Bstatus%5D=1&include=sport&include=sport';
 const HIGH_LEVEL_SCHEDULE = 'https://www.nbcolympics.com/api/high_level_schedule?include=sport&sort=drupal_internal__id';
@@ -32,13 +33,9 @@ module.exports.getScheduleForSportOnDate = async (sport, date) => {
  *
  * @returns {string[]} An array of URL IDs for the summer games.
  */
-module.exports.getSummerGamesUrlIds = () => {
-    const filePath = path.join(__dirname, '../../mocks/high_level_schedule.json');
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    const included = data.included || [];
-    return included
-        .filter(item => item.attributes.games_league === 'summer')
-        .map(item => item.attributes.url_id);
+module.exports.getSummerGamesUrlIds = async () => {
+    const sports = await knex('sports').where('games_league', 'summer').select('url_id');
+    return sports.map(sport => sport.url_id);
 };
 
 
@@ -49,7 +46,7 @@ module.exports.getSummerGamesUrlIds = () => {
  * @returns {Promise<DailySchedule>} A promise that resolves to a DailySchedule object where each key is a sport name and the value is an array of events for that sport on the given day.
  */
 module.exports.getAllSummerGamesSchedules = async (testDate) => {
-    const urlIds = module.exports.getSummerGamesUrlIds();
+    const urlIds = await module.exports.getSummerGamesUrlIds();
     const date = testDate || new Date().toISOString().split('T')[0];
     const schedule = new DailySchedule(date);
 
@@ -108,3 +105,32 @@ async function getScheduleData(url)
         console.log('Error fetching data:', error);
     }
 }
+
+/**
+ * Fetches sports data from the SPORT_FRONTPAGE URL.
+ *
+ * @returns {Promise<Object[]>} A promise that resolves to an array of sports data objects.
+ */
+module.exports.getSportsData = async () => {
+    try {
+        const { data } = await axios.get(SPORT_FRONTPAGE);
+        if (data && data.data) {
+            return data.data.map(entry => {
+                return {
+                    name: entry.attributes.title,
+                    machine_name: entry.attributes.machine_name,
+                    games_league: entry.attributes.games_league,
+                    active: entry.attributes.status,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+            }).filter(entry => entry !== null); // Filter out null entries
+        } else {
+            console.log('Invalid data format:', data);
+            return [];
+        }
+    } catch (error) {
+        console.log('Error fetching data:', error);
+        return [];
+    }
+};

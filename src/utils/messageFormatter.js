@@ -94,3 +94,23 @@ module.exports.formatMedalTable = (medalTable) => {
         .setDescription(description)
         .setColor(0x00AE86);
 };
+
+/**
+ * Formats a list of events for a specific sport into a Discord Embed message.
+ *
+ * @param {Object[]} events - The list of events to format.
+ * @returns {EmbedBuilder} The formatted Discord Embed message.
+ */
+module.exports.formatEventsForSport = (events) => {
+    const embed = new EmbedBuilder()
+        .setTitle(`Events for ${events[0].sport.title}`)
+        .setColor('#0099ff');
+
+    let description = events.map(event => 
+        `**${event.title}**\nStart: <t:${Math.floor(new Date(event.startDate).getTime() / 1000)}:t>\nEnd: <t:${Math.floor(new Date(event.endDate).getTime() / 1000)}:t>\n`
+    ).join('\n');
+
+    embed.setDescription(description);
+
+    return embed;
+};
