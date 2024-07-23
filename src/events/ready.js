@@ -10,6 +10,7 @@ const knex = require('knex')(knexConfig.development); // Initialize knex with th
 const scheduleDailyAnnouncement = require('../schedules/dailyAnnouncement');
 const scheduleLiveFeed = require('../schedules/liveFeed');
 const { getSportsData } = require('../utils/fetchData');
+const { autocomplete } = require('../commands/sportevents');
 
 const commands = [
     {
@@ -44,7 +45,8 @@ const commands = [
                 name: 'sport',
                 type: ApplicationCommandOptionType.String,
                 description: 'The name of the sport.',
-                required: true
+                required: true,
+                autocomplete: true
             },
             {
                 name: 'date',
@@ -83,13 +85,19 @@ async function populateSports() {
         const sports = await getSportsData(); // Use the function from fetchData.js
 
         if (sports && sports.length > 0) {
-            await knex('sports').insert(sports);
+            for (const sport of sports) {
+                const existingSport = await knex('sports').where('machine_name', sport.machine_name).first();
+                if (!existingSport) {
+                    console.log(`Adding new sport: ${sport.name}`);
+                    await knex('sports').insert(sport);
+                }
+            }
             console.log('Sports table populated successfully.');
         } else {
             console.log('No sports data available.');
         }
     } catch (error) {
-        console.log('Error fetching data:', error);
+        console.error('Error fetching data:', error);
     } finally {
         await knex.destroy(); // Ensure knex is properly destroyed
     }

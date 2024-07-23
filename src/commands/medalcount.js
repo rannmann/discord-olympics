@@ -9,12 +9,12 @@ module.exports = {
         {
             name: 'season',
             type: ApplicationCommandOptionType.String, 
-            description: 'The season year to fetch the medal table data for. Defaults to 2021.',
+            description: 'The season year to fetch the medal table data for. Defaults to 2024.',
             required: false
         }
     ],
     async execute(interaction) {
-        const season = interaction.options.getString('season') || '2021';
+        const season = interaction.options.getString('season') || '2024';
         await interaction.deferReply({ ephemeral: true });
 
         try {

@@ -34,7 +34,8 @@ module.exports.getScheduleForSportOnDate = async (sport, date) => {
  * @returns {string[]} An array of URL IDs for the summer games.
  */
 module.exports.getSummerGamesUrlIds = async () => {
-    const sports = await knex('sports').where('games_league', 'summer').select('url_id');
+    // Machine name and url id are identical.
+    const sports = await knex('sports').where('games_league', 'summer').select('machine_name');
     return sports.map(sport => sport.url_id);
 };
 

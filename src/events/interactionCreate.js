@@ -1,28 +1,20 @@
-const { urls } = require('../config');
-const fetchOlympicsData = require('../utils/fetchData');
-const messageFormatter = require('../utils/messageFormatter');
-const medalCountCommand = require('../commands/medalcount');
-const sportEventsCommand = require('../commands/sportevents');
-
 module.exports = async (interaction) => {
-    if (!interaction.isCommand()) return;
+    if (!interaction.isCommand() && !interaction.isAutocomplete()) return;
 
-    const { commandName } = interaction;
-
-
-    if (commandName === 'sports') {
-        await interaction.deferReply(); // Acknowledge the command
-        const date = interaction.options.getString('date');
-        const schedule = await fetchOlympicsData.getAllSummerGamesSchedules(date);
-        const formattedMessage = messageFormatter.formatSportsForDay(schedule);
-        await interaction.editReply({ embeds: [formattedMessage] });
-    }
-
-    if (commandName === 'medalcount') {
-        await medalCountCommand.execute(interaction);
-    }
-
-    if (commandName === 'sportevents') {
-        await sportEventsCommand.execute(interaction);
+    if (interaction.isCommand()) {
+        const command = require(`../commands/${interaction.commandName}`);
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
+        }
+    } else if (interaction.isAutocomplete()) {
+        const command = require(`../commands/${interaction.commandName}`);
+        try {
+            await command.autocomplete(interaction);
+        } catch (error) {
+            console.error(error);
+        }
     }
 };
