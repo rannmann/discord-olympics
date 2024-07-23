@@ -33,10 +33,10 @@ module.exports.getScheduleForSportOnDate = async (sport, date) => {
  *
  * @returns {string[]} An array of URL IDs for the summer games.
  */
-module.exports.getSummerGamesUrlIds = async () => {
+async function getSummerGamesUrlIds() {
     // Machine name and url id are identical.
     const sports = await knex('sports').where('games_league', 'summer').select('machine_name');
-    return sports.map(sport => sport.url_id);
+    return sports.map(sport => sport.machine_name);
 };
 
 
@@ -47,7 +47,7 @@ module.exports.getSummerGamesUrlIds = async () => {
  * @returns {Promise<DailySchedule>} A promise that resolves to a DailySchedule object where each key is a sport name and the value is an array of events for that sport on the given day.
  */
 module.exports.getAllSummerGamesSchedules = async (testDate) => {
-    const urlIds = await module.exports.getSummerGamesUrlIds();
+    const urlIds = await getSummerGamesUrlIds();
     const date = testDate || new Date().toISOString().split('T')[0];
     const schedule = new DailySchedule(date);
 

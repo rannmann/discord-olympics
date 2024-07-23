@@ -22,7 +22,7 @@ module.exports = {
         }
     ],
     async execute(interaction) {
-        const date = interaction.options.getString('date');
+        const date = interaction.options.getString('date') ?? null;
         const sportName = interaction.options.getString('sport');
         
         // Fetch sports list from the database
