@@ -19,8 +19,6 @@ exports.up = function (knex) {
             table.bigInteger('start_date').notNullable();
             table.bigInteger('end_date').notNullable();
             table.boolean('is_medal_session').notNullable();
-            table.integer('sport_id').unsigned().notNullable();
-            table.foreign('sport_id').references('id').inTable('sports');
             table.text('video_url').notNullable();
             table.text('hero_image').notNullable();
             table.text('thumbnail').notNullable();
@@ -52,6 +50,14 @@ exports.up = function (knex) {
             table.uuid('athlete_id').notNullable();
             table.foreign('athlete_id').references('id').inTable('athletes');
             table.unique(['event_id', 'athlete_id']);
+        })
+        // Add pivot table for events and sports
+        .createTable('event_sports', function (table) {
+            table.uuid('event_id').notNullable();
+            table.foreign('event_id').references('id').inTable('events');
+            table.uuid('sport_id').notNullable();
+            table.foreign('sport_id').references('id').inTable('sports');
+            table.unique(['event_id', 'sport_id']);
         });
 };
 
@@ -61,10 +67,11 @@ exports.up = function (knex) {
  */
 exports.down = function (knex) {
     return knex.schema
-        .dropTable('sports')
+        .dropTable('event_sports')
         .dropTable('event_athletes')
         .dropTable('event_countries')
         .dropTable('athletes')
         .dropTable('countries')
-        .dropTable('events');
+        .dropTable('events')
+        .dropTable('sports');
 };

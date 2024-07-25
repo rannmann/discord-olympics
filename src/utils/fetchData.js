@@ -29,6 +29,20 @@ module.exports.getScheduleForSportOnDate = async (sport, date) => {
 
 
 /**
+ * 
+ * @param {string} sport 
+ * @param {string} date 
+ * @returns {array}
+ */
+module.exports.getRawScheduleForSportOnDate = async (sport, date) => {
+    console.log(`Fetching schedule for ${sport} on ${date}...`);
+    const url = `https://schedules.nbcolympics.com/api/v1/schedule?timeZone=America%2FLos_Angeles&startDate=${date}&endDate=${date}&filterType=sports&filterValue=${sport}&inPattern=true`;
+    const { data } = await axios.get(url);
+    return data.data;
+};
+
+
+/**
  * Retrieves the URL IDs for the summer games from the cached high-level schedule data.
  *
  * @returns {string[]} An array of URL IDs for the summer games.
@@ -107,31 +121,29 @@ async function getScheduleData(url)
     }
 }
 
-/**
- * Fetches sports data from the SPORT_FRONTPAGE URL.
- *
- * @returns {Promise<Object[]>} A promise that resolves to an array of sports data objects.
- */
 module.exports.getSportsData = async () => {
-    try {
-        const { data } = await axios.get(SPORT_FRONTPAGE);
-        if (data && data.data) {
-            return data.data.map(entry => {
-                return {
-                    name: entry.attributes.title,
-                    machine_name: entry.attributes.machine_name,
-                    games_league: entry.attributes.games_league,
-                    active: entry.attributes.status,
-                    created_at: new Date(),
-                    updated_at: new Date()
-                };
-            }).filter(entry => entry !== null); // Filter out null entries
-        } else {
-            console.log('Invalid data format:', data);
-            return [];
+    const url = 'https://www.nbcolympics.com/api/high_level_schedule?include=sport&sort=drupal_internal__id';
+
+    const { data } = await axios.get(url);
+
+    const sports = data.included.filter(item => item.type === 'sport');
+
+    const uniqueSports = sports.reduce((acc, sport) => {
+        if (!acc.some(s => s.id === sport.id)) {
+            acc.push({
+                id: sport.id,
+                name: sport.attributes.name,
+                machine_name: sport.attributes.machine_name,
+                games_league: sport.attributes.games_league,
+                active: sport.attributes.active
+            });
         }
-    } catch (error) {
-        console.log('Error fetching data:', error);
-        return [];
+        return acc;
+    }, []);
+
+    for (const sport of uniqueSports) {
+        await knex('sports').insert(sport).onConflict('machine_name').ignore();
     }
+
+    console.log('Sports inserted successfully');
 };

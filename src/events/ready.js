@@ -9,8 +9,8 @@ const knex = require('knex')(knexConfig.development); // Initialize knex with th
 
 const scheduleDailyAnnouncement = require('../schedules/dailyAnnouncement');
 const scheduleLiveFeed = require('../schedules/liveFeed');
+const scheduleUpdateTableData = require('../schedules/updateTableData');
 const { getSportsData } = require('../utils/fetchData');
-const { autocomplete } = require('../commands/sportevents');
 
 const commands = [
     {
@@ -75,6 +75,7 @@ module.exports = async (client) => {
 
         //scheduleDailyAnnouncement();
         //scheduleLiveFeed();
+        scheduleUpdateTableData();
     } catch (error) {
         console.error(error);
     }
@@ -82,7 +83,7 @@ module.exports = async (client) => {
 
 async function populateSports() {
     try {
-        const sports = await getSportsData(); // Use the function from fetchData.js
+        const sports = await getSportsData();
 
         if (sports && sports.length > 0) {
             for (const sport of sports) {
@@ -99,6 +100,6 @@ async function populateSports() {
     } catch (error) {
         console.error('Error fetching data:', error);
     } finally {
-        await knex.destroy(); // Ensure knex is properly destroyed
+        await knex.destroy();
     }
 }
