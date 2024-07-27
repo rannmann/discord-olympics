@@ -41,6 +41,21 @@ module.exports.getRawScheduleForSportOnDate = async (sport, date) => {
     return data.data;
 };
 
+/**
+ * Fetches the schedule data for a specific sport over a range of dates.
+ *
+ * @param {string} sport - The sport for which to fetch the schedule.
+ * @param {string} startDate - The start date for the range in YYYY-MM-DD format.
+ * @param {string} endDate - The end date for the range in YYYY-MM-DD format.
+ * @returns 
+ */
+module.exports.getRawScheduleForSportOnDateRange = async (sport, startDate, endDate) => {
+    console.log(`Fetching schedule for ${sport} on ${startDate} to ${endDate}...`);
+    const url = `https://schedules.nbcolympics.com/api/v1/schedule?timeZone=America%2FLos_Angeles&startDate=${startDate}&endDate=${endDate}&filterType=sports&filterValue=${sport}&inPattern=true`;
+    const { data } = await axios.get(url);
+    return data.data;
+};
+
 
 /**
  * Retrieves the URL IDs for the summer games from the cached high-level schedule data.
@@ -85,7 +100,7 @@ module.exports.getMedalTableData = async (season = '2024') => {
     const url = `https://api-gracenote.nbcolympics.com/svc/games_v2.svc/json/GetMedalTable_Season?competitionSetId=1&season=${season}&languageCode=2`;
     try {
         const { data } = await axios.get(url);
-        if (data && data.MedalTableNOC) {
+        if (data && data.MedalTableNOC && data.MedalTableNOC.length > 0) {
             return data.MedalTableNOC.map(entry => new CountryMedals(
                 entry.c_NOC,
                 entry.c_NOCShort,
@@ -122,20 +137,20 @@ async function getScheduleData(url)
 }
 
 module.exports.getSportsData = async () => {
-    const url = 'https://www.nbcolympics.com/api/high_level_schedule?include=sport&sort=drupal_internal__id';
+    const url = 'https://images.nbcolympics.com/static/json/sports-filters.json';
 
     const { data } = await axios.get(url);
 
-    const sports = data.included.filter(item => item.type === 'sport');
+    const sports = data.filter(item => item.entityType === 'olympicSport');
 
     const uniqueSports = sports.reduce((acc, sport) => {
-        if (!acc.some(s => s.id === sport.id)) {
+        if (!acc.some(s => s.drupalId === sport.drupalId)) {
             acc.push({
-                id: sport.id,
-                name: sport.attributes.name,
-                machine_name: sport.attributes.machine_name,
-                games_league: sport.attributes.games_league,
-                active: sport.attributes.active
+                id: sport.drupalId,
+                name: sport.title,
+                machine_name: sport.machineName,
+                games_league: sport.gameType,
+                active: true // Assuming all sports from this endpoint are active
             });
         }
         return acc;
@@ -143,7 +158,20 @@ module.exports.getSportsData = async () => {
 
     for (const sport of uniqueSports) {
         await knex('sports').insert(sport).onConflict('machine_name').ignore();
+
+        // Insert subSports if they exist
+        if (sport.subSports && sport.subSports.length > 0) {
+            for (const subSport of sport.subSports) {
+                await knex('sub_sports').insert({
+                    id: subSport.drupalId,
+                    name: subSport.title,
+                    machine_name: subSport.machineName,
+                    parent_sport_id: sport.drupalId,
+                    active: true // Assuming all subSports from this endpoint are active
+                }).onConflict('machine_name').ignore();
+            }
+        }
     }
 
-    console.log('Sports inserted successfully');
+    console.log('Sports and subSports inserted successfully');
 };

@@ -1,20 +1,30 @@
 const schedule = require('node-schedule');
-const { getRawScheduleForSportOnDate } = require('../utils/fetchData');
+const { getRawScheduleForSportOnDateRange } = require('../utils/fetchData');
 const knex = require('knex')(require('../../knexfile').development);
 const { scheduleUpdateTime } = require('../config');
 require('dotenv').config();
 
 async function handleSportUpdate(sport) {
-    // TODO: Update date param to use YYYY-MM-DD
+    // Get data for yesterday + today + tomorrow.
     const date = new Date();
-    const scheduleData = await getRawScheduleForSportOnDate(sport.machine_name, date.toISOString().split('T')[0]);
+    const yesterday = new Date(date);
+    yesterday.setDate(date.getDate() - 1);
+    const tomorrow = new Date(date);
+    tomorrow.setDate(date.getDate() + 1);
+    const startDate = yesterday.toISOString().split('T')[0];
+    const endDate = tomorrow.toISOString().split('T')[0];
+    const scheduleData = await getRawScheduleForSportOnDateRange(
+        sport.machine_name,
+        startDate,
+        endDate
+    );
 
     if (scheduleData.length === 0) {
-        console.log('No schedule data found for sport:', sport.machine_name, ' on ', date.toISOString().split('T')[0]);
+        console.log('No schedule data found for sport:', sport.machine_name, ' on ', startDate, ' to ', endDate);
         return;
     }
 
-    console.log('Found ', scheduleData.length, ' events for sport:', sport.machine_name, ' on ', date.toISOString().split('T')[0]);
+    console.log('Found ', scheduleData.length, ' events for sport:', sport.machine_name, ' on ', startDate, ' to ', endDate);
 
     for (const event of scheduleData) {
         // Insert sports
@@ -75,7 +85,17 @@ async function handleSportUpdate(sport) {
             hero_image: event.singleEvent.heroImage.path,
             thumbnail: event.singleEvent.thumbnail.path,
             summary: event.singleEvent.summary
-        }).onConflict('id').ignore();
+        }).onConflict('id').merge({
+            title: event.singleEvent.title,
+            status: event.singleEvent.status,
+            start_date: new Date(event.singleEvent.startDate),
+            end_date: new Date(event.singleEvent.endDate),
+            is_medal_session: false,
+            video_url: event.singleEvent.videoURL,
+            hero_image: event.singleEvent.heroImage.path,
+            thumbnail: event.singleEvent.thumbnail.path,
+            summary: event.singleEvent.summary
+        });
 
         for (const s of event.sports || []) {
             await knex('event_sports').insert({
