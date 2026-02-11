@@ -1,32 +1,59 @@
-This repo is an early WIP.
+# Discord Olympics Bot 🏅
 
-# Features
+A Discord bot for tracking the Winter Olympics 2026 (Milano Cortina) — medal counts, recent winners, and sports schedules.
 
-## Daily announcement
+## Commands
 
-I want to show the timestamps of when each important game will start in the user's timestamp (using tags, like `<t:1543392060:t>`).  I want it broken into 3 sections:
+- `/medalcount` — Current medal standings by country (top 15 with flags)
+- `/medals` — Recent medal winners with athlete names, events, and disciplines
+- `/sports` — All 16 winter sports with total medal events
 
-1. Medaling events (bronze/silver/gold).
-2. A list of all sports being played that day
-3. Other Team USA games (that are not already covered in the medaling section).
+## Data Sources
 
-## Live feed
+- **Primary:** NBC Olympics API (real-time, includes athlete names and event details)
+- **Fallback:** Wikipedia (medal counts only, used if NBC token is unavailable)
 
-I want a new message to be posted by the bot anytime a new event starts.  It should say the sport and the event name at minimum.  If there is team/player information, I would like that included as well.  This should be a short message since it's likely to be spammy.
+## Setup
 
-## Medal Counter
+1. Clone the repo
+2. `npm install`
+3. Copy `.env.example` to `.env` and fill in your values
+4. `node src/index.js`
 
-I want a command that returns the current medal count only to the user who requested it, so we don't spoil it for anyone not watching live.
+### Environment Variables
 
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DISCORD_TOKEN` | Yes | Bot token from Discord Developer Portal |
+| `DISCORD_CLIENT_ID` | Yes | Application ID from Discord Developer Portal |
+| `DISCORD_GUILD_ID` | No | Server ID for instant command registration (omit for global, ~1hr delay) |
+| `NBC_APP_TOKEN` | No | NBC Olympics API token (falls back to Wikipedia without it) |
 
----
+### Bot Invite
 
- I think I have a way to fetch the data I need.  The page seems to load this initially, which shows data about each sport:
+Replace `YOUR_CLIENT_ID` with your application ID:
 
-https://www.nbcolympics.com/api/sport_front?sort=title&filter%5Bstatus%5D=1&include=sport&include=sport
+```
+https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot%20applications.commands&permissions=2048
+```
 
-It seems like we might want to store some data from there, but I'm not sure what yet, beyond the list of all the sports.
+## Running as a Service
 
-This one seems useful to have daily overview of each sport though: https://www.nbcolympics.com/api/high_level_schedule?include=sport&sort=drupal_internal__id
+```bash
+# Create systemd user service
+mkdir -p ~/.config/systemd/user
+cp olympics-bot.service ~/.config/systemd/user/  # or create one manually
+systemctl --user daemon-reload
+systemctl --user enable --now olympics-bot
+```
 
-And when I click into any sport from the main page, it breaks down the actual events seemingly from this API call when I clicked Archery: https://schedules.nbcolympics.com/api/v1/schedule?timeZone=America%2FLos_Angeles&startDate=2024-01-01&endDate=2024-08-11&filterType=sports&filterValue=archery&inPattern=true
+## Tech Stack
+
+- Node.js + discord.js v14
+- axios for API calls
+- Wikipedia MediaWiki API (fallback)
+- NBC Olympics OVP API (primary)
+
+## History
+
+Originally built for the 2024 Paris Summer Olympics using NBC's Gracenote API. Rewritten for the 2026 Milano Cortina Winter Olympics with new data sources.
