@@ -1,18 +1,24 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { getAllSummerGamesSchedules } = require('../utils/fetchData');
+const { getScheduleOverview } = require('../utils/fetchData');
+const { formatScheduleOverview } = require('../utils/messageFormatter');
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('sports')
-        .setDescription('Get the list of sports being played on a specific date')
-        .addStringOption(option =>
-            option.setName('date')
-                .setDescription('The date in YYYY-MM-DD format')
-                .setRequired(true)),
+    name: 'sports',
+    description: 'Get the list of Winter Olympics 2026 sports',
+    options: [],
     async execute(interaction) {
-        const date = interaction.options.getString('date');
-        const schedule = await getAllSummerGamesSchedules(date);
-        const sports = Object.keys(schedule.events);
-        await interaction.reply(`Sports on ${date}: ${sports.join(', ')}`);
-    },
+        await interaction.deferReply({ ephemeral: true });
+
+        try {
+            const sports = await getScheduleOverview();
+            if (sports.length === 0) {
+                await interaction.editReply('No schedule data available.');
+                return;
+            }
+            const embed = formatScheduleOverview(sports);
+            await interaction.editReply({ embeds: [embed] });
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply('There was an error fetching the sports schedule.');
+        }
+    }
 };

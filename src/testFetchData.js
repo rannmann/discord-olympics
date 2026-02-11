@@ -1,17 +1,19 @@
-const { getScheduleForSportOnDate, getSummerGamesUrlIds, getAllSummerGamesSchedules } = require('./utils/fetchData');
+require('dotenv').config();
+// Quick test script to verify data fetching works
+const { getMedalTableData, getScheduleOverview } = require('./utils/fetchData');
 
-(async () => {
-  try {
-    //const events = await getScheduleForSportOnDate('archery', '2024-08-04');
-    //console.log('Fetched Events:');
-    //console.log(events);
+async function test() {
+    console.log('=== Medal Table ===');
+    const medals = await getMedalTableData();
+    medals.forEach(m => {
+        console.log(`${m.rank}. ${m.country} — 🥇${m.gold} 🥈${m.silver} 🥉${m.bronze} (${m.total})`);
+    });
 
-    //console.log('Fetching all summer games schedules...');
-    //console.log(getSummerGamesUrlIds());
+    console.log('\n=== Sports Schedule ===');
+    const sports = await getScheduleOverview();
+    sports.forEach(s => {
+        console.log(`${s.name}: ${s.totalMedalEvents} medal events, ${s.competitionDays} competition days`);
+    });
+}
 
-    console.log('Fetching all summer games schedules for 2024-08-04...');
-    console.log(await getAllSummerGamesSchedules('2024-08-04'));
-  } catch (error) {
-    console.error('Error while testing fetch data:', error);
-  }
-})();
+test().catch(console.error);

@@ -1,11 +1,16 @@
 {
+  "name": "discord-olympics",
+  "description": "Discord bot for tracking Winter Olympics 2026 medal counts and schedules",
+  "version": "2.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node src/testFetchData.js"
+  },
   "dependencies": {
     "axios": "^1.7.2",
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
-    "iso-3166-1": "^2.1.1",
-    "knex": "^3.1.0",
-    "node-schedule": "^2.1.1",
-    "sqlite3": "^5.1.7"
+    "iso-3166-1": "^2.1.1"
   }
 }

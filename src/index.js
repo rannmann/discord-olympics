@@ -10,4 +10,5 @@ const interactionCreateHandler = require('./events/interactionCreate');
 client.once('ready', readyHandler);
 client.on('interactionCreate', interactionCreateHandler);
 
+console.log('Starting Olympics Bot...');
 client.login(process.env.DISCORD_TOKEN);

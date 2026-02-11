@@ -1,116 +1,115 @@
-const { EmbedBuilder } = require('@discordjs/builders');
-const DailySchedule = require('../models/DailySchedule');
+const { EmbedBuilder } = require('discord.js');
 const iso = require('iso-3166-1');
 
-// Custom mapping for problematic country codes
-const customCountryMapping = {
-    'NED': 'NL',  // Netherlands
-    'GER': 'DE',  // Germany
-    'ROC': 'RU'   // Russian Olympic Committee (mapped to Russia)
+// Map IOC codes to ISO 2-letter codes for Discord flag emoji
+const iocToIso = {
+    'NOR': 'NO', 'SUI': 'CH', 'USA': 'US', 'GER': 'DE', 'SWE': 'SE',
+    'AUT': 'AT', 'FRA': 'FR', 'ITA': 'IT', 'JPN': 'JP', 'CZE': 'CZ',
+    'NED': 'NL', 'SLO': 'SI', 'CAN': 'CA', 'CHN': 'CN', 'NZL': 'NZ',
+    'KOR': 'KR', 'AUS': 'AU', 'FIN': 'FI', 'GBR': 'GB', 'ESP': 'ES',
+    'POL': 'PL', 'BEL': 'BE', 'BRA': 'BR', 'ROC': 'RU', 'UKR': 'UA',
+    'EST': 'EE', 'LAT': 'LV', 'LTU': 'LT', 'SVK': 'SK', 'CRO': 'HR',
+    'HUN': 'HU', 'ROU': 'RO', 'BUL': 'BG', 'DEN': 'DK', 'KAZ': 'KZ',
+    'BLR': 'BY', 'GEO': 'GE', 'ARM': 'AM', 'LIE': 'LI', 'ISL': 'IS',
+    'IRL': 'IE', 'AND': 'AD', 'MON': 'MC', 'SMR': 'SM', 'LUX': 'LU',
+    'MDA': 'MD', 'MNE': 'ME', 'MKD': 'MK', 'ALB': 'AL', 'BIH': 'BA',
+    'SRB': 'RS', 'TUR': 'TR',
 };
 
-/**
- * Formats an event into a Discord Embed message.
- *
- * @param {Object} event - The event data to format.
- * @returns {EmbedBuilder} The formatted Discord Embed message.
- */
-module.exports = (event) => {
-    const embed = new EmbedBuilder()
-        .setTitle(event.title)
-        .setDescription(event.summary)
-        .addFields({ name: 'Sport', value: event.sport.title, inline: true })
-        .addFields({ name: 'Medal Session', value: event.isMedalSession ? 'Yes' : 'No', inline: true })
-        .addFields({ name: 'Start Time', value: `<t:${Math.floor(new Date(event.startDate).getTime() / 1000)}:t>`, inline: true })
-        .addFields({ name: 'End Time', value: `<t:${Math.floor(new Date(event.endDate).getTime() / 1000)}:t>`, inline: true })
-        .setURL(event.videoURL)
-        .setColor('#0099ff')
-        .setFooter({ text: 'Event ID: ' + event.eventId });
-
-    return embed;
+// Map country names to ISO codes for flag emoji (Wikipedia fallback)
+const countryNameToCode = {
+    'Norway': 'NO', 'Switzerland': 'CH', 'United States': 'US',
+    'Germany': 'DE', 'Sweden': 'SE', 'Austria': 'AT', 'France': 'FR',
+    'Italy': 'IT', 'Japan': 'JP', 'Czech Republic': 'CZ',
+    'Netherlands': 'NL', 'Slovenia': 'SI', 'Canada': 'CA',
+    'China': 'CN', 'New Zealand': 'NZ', 'South Korea': 'KR',
+    'Australia': 'AU', 'Finland': 'FI', 'Great Britain': 'GB',
+    'Spain': 'ES', 'Poland': 'PL', 'Belgium': 'BE', 'Brazil': 'BR',
+    'ROC': 'RU', 'Russia': 'RU', 'Ukraine': 'UA', 'Estonia': 'EE',
+    'Latvia': 'LV', 'Lithuania': 'LT', 'Slovakia': 'SK',
+    'Croatia': 'HR', 'Hungary': 'HU', 'Romania': 'RO',
+    'Bulgaria': 'BG', 'Denmark': 'DK', 'Kazakhstan': 'KZ',
+    'Belarus': 'BY', 'Georgia': 'GE', 'Armenia': 'AM',
+    'Liechtenstein': 'LI', 'Iceland': 'IS', 'Ireland': 'IE',
+    'Andorra': 'AD', 'Monaco': 'MC', 'San Marino': 'SM',
+    'Luxembourg': 'LU', 'Moldova': 'MD', 'Montenegro': 'ME',
+    'North Macedonia': 'MK', 'Albania': 'AL', 'Bosnia and Herzegovina': 'BA',
+    'Serbia': 'RS', 'Türkiye': 'TR', 'Turkey': 'TR',
 };
 
-/**
- * Formats a list of sports and their event counts into a Discord Embed message.
- *
- * @param {DailySchedule} schedule - The schedule data with sports as keys and events as values.
- * @returns {EmbedBuilder} The formatted Discord Embed message.
- */
-module.exports.formatSportsForDay = (schedule) => {
-    console.log(schedule);
-    const embed = new EmbedBuilder()
-        .setTitle(`Sports Schedule for ${schedule.date}`)
-        .setColor('#0099ff');
-
-    let hasEvents = false;
-    let description = '';
-
-    if (schedule) {
-        const sportsList = Object.entries(schedule.sports)
-            .filter(([_, events]) => events.length > 0)
-            .sort(([sportA], [sportB]) => sportA.localeCompare(sportB))
-            .map(([sport, events]) => `**${sport}**: ${events.length} events`);
-
-        if (sportsList.length > 0) {
-            hasEvents = true;
-            description = sportsList.join('\n');
-        }
+function getFlag(countryName, countryCode) {
+    // Try IOC code first (from NBC API)
+    if (countryCode && iocToIso[countryCode]) {
+        return `:flag_${iocToIso[countryCode].toLowerCase()}:`;
     }
-
-    if (!hasEvents) {
-        description = 'No events scheduled for today.';
+    // Fall back to country name lookup (Wikipedia)
+    const code = countryNameToCode[countryName];
+    if (code) {
+        return `:flag_${code.toLowerCase()}:`;
     }
-
-    embed.setDescription(description);
-
-    return embed;
-};
+    return '🏳️';
+}
 
 /**
- * Formats the medal table data into a Discord Embed message.
- *
- * @param {CountryMedals[]} medalTable - The medal table data to format.
- * @returns {EmbedBuilder} The formatted Discord Embed message.
+ * Formats the medal table into a Discord Embed.
  */
-module.exports.formatMedalTable = (medalTable) => {
-    // Limit the medal table to the top 10 countries
-    const top10MedalTable = medalTable.slice(0, 10);
+module.exports.formatMedalTable = (medalTable, limit = 15) => {
+    const top = medalTable.slice(0, limit);
 
     let description = '';
-    top10MedalTable.forEach(entry => {
-        let countryCode = customCountryMapping[entry.countryCode];
-        if (!countryCode) {
-            const country = iso.whereAlpha3(entry.countryCode);
-            if (!country) {
-                console.error(`Country code ${entry.countryCode} not found`);
-            }
-            countryCode = country ? country.alpha2 : 'white';
-        }
-        description += `:flag_${countryCode.toLowerCase()}: **${entry.country}** - Total: ${entry.total}, :first_place: ${entry.gold}, :second_place: ${entry.silver}, :third_place: ${entry.bronze}\n`;
+    top.forEach((entry, i) => {
+        const flag = getFlag(entry.country, entry.countryCode);
+        const rank = entry.rank || (i + 1);
+        description += `**${rank}.** ${flag} **${entry.country}** — 🥇 ${entry.gold}  🥈 ${entry.silver}  🥉 ${entry.bronze}  Total: ${entry.total}\n`;
     });
 
     return new EmbedBuilder()
-        .setTitle('Olympic Medal Count')
-        .setDescription(description)
-        .setColor(0x00AE86);
+        .setTitle('🏅 Winter Olympics 2026 — Medal Count')
+        .setDescription(description || 'No medal data available yet.')
+        .setColor(0x1E90FF)
+        .setFooter({ text: 'Data from Wikipedia • Milano Cortina 2026' })
+        .setTimestamp();
 };
 
 /**
- * Formats a list of events for a specific sport into a Discord Embed message.
- *
- * @param {Object[]} events - The list of events to format.
- * @returns {EmbedBuilder} The formatted Discord Embed message.
+ * Formats recent medal results into a Discord Embed.
  */
-module.exports.formatEventsForSport = (events) => {
-    const embed = new EmbedBuilder()
-        .setTitle(`Events for ${events[0].sport.title}`)
-        .setColor('#0099ff');
+module.exports.formatMedalResults = (events, limit = 10) => {
+    const recent = events.slice(0, limit);
+    let description = '';
 
-    let description = events.map(event => 
-        `**${event.title}**\nStart: <t:${Math.floor(new Date(event.startDate).getTime() / 1000)}:t>\nEnd: <t:${Math.floor(new Date(event.endDate).getTime() / 1000)}:t>\n`
-    ).join('\n');
+    for (const evt of recent) {
+        description += `**${evt.discipline} — ${evt.event}**\n`;
+        for (const [type, winner] of Object.entries(evt.medals)) {
+            const emoji = { gold: '🥇', silver: '🥈', bronze: '🥉' }[type] || '🏅';
+            const flag = getFlag(winner.country, winner.countryCode);
+            description += `${emoji} ${winner.athlete} ${flag}\n`;
+        }
+        description += '\n';
+    }
 
-    embed.setDescription(description);
+    return new EmbedBuilder()
+        .setTitle('🏅 Winter Olympics 2026 — Recent Medals')
+        .setDescription(description || 'No medal results available yet.')
+        .setColor(0xFFD700)
+        .setFooter({ text: 'Data from NBC Olympics • Milano Cortina 2026' })
+        .setTimestamp();
+};
 
-    return embed;
+/**
+ * Formats the schedule overview into a Discord Embed.
+ */
+module.exports.formatScheduleOverview = (sports) => {
+    let description = '';
+    sports.forEach(sport => {
+        const medal = sport.totalMedalEvents > 0 ? `🏅 ${sport.totalMedalEvents} medal events` : '⏳ Competition only';
+        description += `**${sport.name}** — ${medal}\n`;
+    });
+
+    return new EmbedBuilder()
+        .setTitle('🏔️ Winter Olympics 2026 — Sports')
+        .setDescription(description || 'No schedule data available.')
+        .setColor(0x1E90FF)
+        .setFooter({ text: 'Milano Cortina 2026 • Feb 6-22' })
+        .setTimestamp();
 };

@@ -1,9 +1,13 @@
 module.exports = {
-    // TODO: Remove this entire section.  We can hard-code these in the fetchData.js file.
-    urls: {
-        scheduleUrl: 'https://schedules.nbcolympics.com/api/v1/schedule?timeZone=America%2FLos_Angeles&startDate=2024-08-04&endDate=2024-08-04&filterType=sports&filterValue=archery&inPattern=true',
-        liveFeedUrl: 'live_feed_url',
-        medalCountUrl: 'medal_count_url'
+    season: 'winter',
+    year: 2026,
+    name: 'Milano Cortina 2026 Winter Olympics',
+    startDate: '2026-02-06',
+    endDate: '2026-02-22',
+    wikipedia: {
+        medalTable: '2026_Winter_Olympics_medal_table',
+        schedule: '2026_Winter_Olympics',
+        scheduleSection: 19  // Calendar section
     },
-    announcementTime: '0 0 * * *'  // Midnight every day
+    announcementTime: '0 8 * * *'  // 8 AM every day
 };
